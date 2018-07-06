@@ -1,0 +1,21 @@
+model{
+  for (i in 1:N) {
+    y[i] ~ dbinom(p[i], n[i])
+    logit(p[i]) <- alpha[species[i]] + beta_drought[species[i]]*drought[i]
+  }
+  
+  for (j in 1:N_species) {
+    alpha[j] ~ dnorm(0, tau_alpha)
+    beta_drought[j] ~ dnorm(mu_beta[j], tau_beta)
+    mu_beta[j] <- delta[1] + delta[2] * pc1[j]
+  }
+  
+  # Priors
+  tau_alpha <- pow(sd_alpha, -2)
+  sd_alpha ~ dnorm(0, 0.1)I(0,)
+  tau_beta <- pow(sd_beta, -2)
+  sd_beta ~ dnorm(0, 0.1)I(0,)
+  for (k in 1:2) {
+    delta[k] ~ dnorm(0, 0.1)
+  }
+}
