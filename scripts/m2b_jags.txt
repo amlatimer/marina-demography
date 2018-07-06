@@ -1,0 +1,48 @@
+model{
+  for (i in 1:N) {
+    y[i] ~ dbinom(p[i], n[i])
+    logit(p[i]) <- a_species[species[i]] + b_drought[species[i]]*drought[i] + b_water[species[i]]*water[i] + b_grass[species[i]]*grass[i] + b_grassxdrought[species[i]]*grass[i]*drought[i] + b_grassxwater[species[i]]*grass[i]*water[i] + a_plot[plot[i]] + a_year[year[i]]
+  }
+  
+  # Species-level regression of coefficients on traits
+  for (j in 1:N_species) {
+    b_drought[j] ~ dnorm(mu_b_drought[j], tau_b_drought)
+    mu_b_drought[j] <- g_drought[1] + g_drought[2] * pc1[j]
+    b_water[j] ~ dnorm(mu_b_water[j], tau_b_water)
+    mu_b_water[j] <- g_water[1] + g_water[2] * pc1[j]
+    b_grass[j] ~ dnorm(mu_b_grass[j], tau_b_grass)
+    mu_b_grass[j] <- g_grass[1] + g_grass[2] * pc1[j]
+    b_grassxdrought[j] ~ dnorm(mu_b_grassxdrought[j], tau_b_grassxdrought)
+    mu_b_grassxdrought[j] <- g_grassxdrought[1] + g_grassxdrought[2] * pc1[j]
+    b_grassxwater[j] ~ dnorm(mu_b_grassxwater[j], tau_b_grassxwater)
+    mu_b_grassxwater[j] <- g_grassxwater[1] + g_grassxwater[2] * pc1[j]
+  }
+  
+  # Priors
+  for (j in 1:N_species) { a_species[j] ~ dnorm(0, tau_a_species) }
+  for (k in 1:N_years) { a_year[k] ~ dnorm(0, tau_a_year) }
+  for (l in 1:N_plots) { a_plot[l] ~ dnorm(0, tau_a_plot) }
+  tau_a_species <- pow(sd_a_species, -2)
+  sd_a_species ~ dnorm(0, 0.1)I(0,)
+  tau_a_year <- pow(sd_a_year, -2)
+  sd_a_year ~ dnorm(0, 0.1)I(0,)
+  tau_a_plot <- pow(sd_a_plot, -2)
+  sd_a_plot ~ dnorm(0, 0.1)I(0,)
+  tau_b_drought <- pow(sd_b_drought, -2)
+  sd_b_drought ~ dnorm(0, 0.1)I(0,)
+  tau_b_water <- pow(sd_b_water, -2)
+  sd_b_water ~ dnorm(0, 0.1)I(0,)
+  tau_b_grass <- pow(sd_b_grass, -2)
+  sd_b_grass ~ dnorm(0, 0.1)I(0,)
+  tau_b_grassxdrought <- pow(sd_b_grassxdrought, -2)
+  sd_b_grassxdrought ~ dnorm(0, 0.1)I(0,)
+  tau_b_grassxwater <- pow(sd_b_grassxwater, -2)
+  sd_b_grassxwater ~ dnorm(0, 0.1)I(0,)
+  for (k in 1:2) {
+    g_drought[k] ~ dnorm(0, 0.1)
+    g_water[k] ~ dnorm(0, 0.1)
+    g_grass[k] ~ dnorm(0, 0.1)
+    g_grassxwater[k] ~ dnorm(0, 0.1)
+    g_grassxdrought[k] ~ dnorm(0, 0.1)
+  }
+}
