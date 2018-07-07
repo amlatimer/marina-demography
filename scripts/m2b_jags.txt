@@ -1,20 +1,25 @@
 model{
   for (i in 1:N) {
     y[i] ~ dbinom(p[i], n[i])
-    logit(p[i]) <- a_species[species[i]] + b_drought[species[i]]*drought[i] + b_water[species[i]]*water[i] + b_grass[species[i]]*grass[i] + b_grassxdrought[species[i]]*grass[i]*drought[i] + b_grassxwater[species[i]]*grass[i]*water[i] + a_plot[plot[i]] + a_year[year[i]]
+    logit(p[i]) <- a_species[species[i]] + b_drought[species[i]]*drought[i] + b_water[species[i]]*water[i] + b_grass[species[i]]*grass[i] + b_grassxdrought[species[i]]*grass[i]*drought[i] + b_grassxwater[species[i]]*grass[i]*water[i]  + a_plot[plot[i]] + b_year * year[i]
   }
   
   # Priors
+  alpha ~ dnorm(0, 0.1)
+  #a_species[1] <- 0
+  for (j in 1:N_species) { a_species[j] ~ dnorm(0, tau_a_species) }
+  #a_plot[1] <- 0
+  for (j in 1:N_plots) { a_plot[j] ~ dnorm(0, tau_a_plot)  }
+  #a_year[1] <- 0
+  #a_year[2] ~ dnorm(0, 0.1)
+  b_year ~ dnorm(0, 0.1)
   for (j in 1:N_species) { 
-    a_species[j] ~ dnorm(0, tau_a_species) 
     b_drought[j] ~ dnorm(mu_b_drought, tau_b_drought) 
     b_water[j] ~ dnorm(mu_b_water, tau_b_water) 
     b_grass[j] ~ dnorm(mu_b_grass, tau_b_grass) 
     b_grassxdrought[j] ~ dnorm(mu_b_grassxdrought, tau_b_grassxdrought) 
     b_grassxwater[j] ~ dnorm(mu_b_grassxwater, tau_b_grassxwater) 
   }
-  for (k in 1:N_years) { a_year[k] ~ dnorm(0, tau_a_year) }
-  for (l in 1:N_plots) { a_plot[l] ~ dnorm(0, tau_a_plot) }
   mu_b_water ~ dnorm(0, 0.01)
   mu_b_drought ~ dnorm(0, 0.01)
   mu_b_grass ~ dnorm(0, 0.01)

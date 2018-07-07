@@ -1,7 +1,7 @@
 model{
   for (i in 1:N) {
 y[i] ~ dbinom(p[i], n[i])
-logit(p[i]) <- a_species[species[i]] + b_drought[species[i]]*drought[i] + b_water[species[i]]*water[i] + b_grass[species[i]]*grass[i] + b_grassxdrought[species[i]]*grass[i]*drought[i] + b_grassxwater[species[i]]*grass[i]*water[i] + a_plot[plot[i]] + a_year[year[i]]
+logit(p[i]) <- a_species[species[i]] + b_drought[species[i]]*drought[i] + b_water[species[i]]*water[i] + b_grass[species[i]]*grass[i] + b_grassxdrought[species[i]]*grass[i]*drought[i] + b_grassxwater[species[i]]*grass[i]*water[i] + a_plot[plot[i]] + b_year * year[i]
 }
 
 # Species-level regression of coefficients on traits
@@ -20,12 +20,12 @@ mu_b_grassxwater[j] <- g_grassxwater[1] + g_grassxwater[2] * pc1[j]
 
 # Priors
 for (j in 1:N_species) { a_species[j] ~ dnorm(0, tau_a_species) }
-for (k in 1:N_years) { a_year[k] ~ dnorm(0, tau_a_year) }
 for (l in 1:N_plots) { a_plot[l] ~ dnorm(0, tau_a_plot) }
+b_year ~ dnorm(0, 0.1)
 tau_a_species <- pow(sd_a_species, -2)
 sd_a_species ~ dnorm(0, 0.1)I(0,)
-tau_a_year <- pow(sd_a_year, -2)
-sd_a_year ~ dnorm(0, 0.1)I(0,)
+#tau_a_year <- pow(sd_a_year, -2)
+#sd_a_year ~ dnorm(0, 0.1)I(0,)
 tau_a_plot <- pow(sd_a_plot, -2)
 sd_a_plot ~ dnorm(0, 0.1)I(0,)
 tau_b_drought <- pow(sd_b_drought, -2)
