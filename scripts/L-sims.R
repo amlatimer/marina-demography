@@ -4,17 +4,27 @@
 ###
 
 # dem = mortality and germination data
+dem <- read.csv("../data/dem.csv")
 # flo.seed = seed set data
+flo.seed <- read.csv("../data/flo-seed.csv")
 # sb = seed carryover in seedbank data
+sb <- read.csv("../data/sb.csv")
 # sim.dem = data frame to store simulations
+sim.dem <- read.csv("../data/sim-dem.csv")
+
 
 ###
 # Models needs
 ###
 # m1.trait = mortality model
+load("../data/m1-trait.rds")
 # m2.trait = seed set model
+load("../data/m2-trait.rds")
 # m3.trait = seed carryover model
+load("../data/m3-trait.rds")
 # m4 = germination model
+load("../data/m4-trait.rds")
+
 
 ###
 # Mortality (NaNs produced here because of 0/0)
