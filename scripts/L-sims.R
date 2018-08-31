@@ -1,3 +1,4 @@
+library(lme4)
 
 ###
 # Dataframes needed
@@ -23,12 +24,55 @@ load("../data/m2-trait.rds")
 # m3.trait = seed carryover model
 load("../data/m3-trait.rds")
 # m4 = germination model
-load("../data/m4-trait.rds")
+load("../data/m4.rds")
 
 
 ###
 # Mortality (NaNs produced here because of 0/0)
 ###
+
+summary(m1.trait)
+
+## To get a bunch of simulations of one particular treatment combination, assuming that the uncertainty about this includes uncertainty about what the plot and year random effects are. 
+
+# new data for one species in a particular combination of treatments, here watered, grassy plots in new unknown plot and year
+testdata <- data.frame(Species = "Agoseris heterophylla", Plot = 100, Year = 2018, PC.F = -0.876, Subplot = "Grass", Treat.Code = "W")
+testsim <- simulate(m1.trait, nsim=100, newdata = testdata, re.form=NA, allow.new.levels=T)
+head(m1.testsim)
+# Seems to work, although it's more complex because each simulation generates both a number successes (dead plants) and failures (survivors). 
+
+## Simulate data for many combinations of treatments in the same way 
+
+# new data for one species in all combinations of treatments
+testdata <- data.frame(Species=rep("Agoseris heterophylla", 6), Plot=rep(100,6), Year = rep(2018, 6), PC.F = rep(-0.876, 6), Subplot = rep(c("Grass", "No Grass"), rep(3, 2)), Treat.Code = rep(c("W", "C", "D"), 2))
+testsim <- simulate(m1.trait, nsim=100, newdata = testdata, re.form=NA, allow.new.levels=T)
+head(m1.testsim)
+# seems to work, but confusing to keep track of which treatments are in which row? 
+
+## Just for fun, compare the mortality rates for Agoseris in Grassy plots for Drought vs Control conditions 
+nsims <- 1000
+testdata_drought <- data.frame(rep(Species = "Agoseris heterophylla", nsims), Plot = rep(100,  nsims), Year = rep(2018, nsims), PC.F = rep(-0.876, nsims), Subplot = rep("Grass", nsims), Treat.Code = rep("D", nsims))
+testdata_control <- data.frame(rep(Species = "Agoseris heterophylla", nsims), Plot = rep(100, nsims), Year = rep(2018, nsims), PC.F = rep(-0.876, nsims), Subplot = rep("Grass", nsims), Treat.Code = rep("C", nsims))
+testsim_drought <- simulate(m1.trait, nsim=1, newdata = testdata_drought, re.form = ~(1|Plot) + (1|Year), allow.new.levels=T)
+testsim_control <- simulate(m1.trait, nsim=1, newdata = testdata_control, re.form = ~(1|Plot) + (1|Year), allow.new.levels=T)
+
+sim.dem.drought <- testsim_drought[[1]][,1] / (testsim_drought[[1]][,1] + testsim_drought[[1]][,2])
+sim.dem.control <- testsim_control[[1]][,1] / (testsim_control[[1]][,1] + testsim_control[[1]][,2])
+
+boxplot(cbind(sim.dem.control, sim.dem.drought))
+# Huh seems to work ok. Higher mortality rates in drought, but a lot of noise
+
+# Make sure it isn't different if you specify random effects as NULL or as the model form, assuming you use new levels for all random effects 
+testsim1 <- simulate(m1.trait, nsim=1, newdata = testdata_control, re.form = NULL, allow.new.levels=T)
+testsim2 <- simulate(m1.trait, nsim=1, newdata = testdata_control, re.form = ~(1|Plot) + (1|Year), allow.new.levels=T)
+boxplot(cbind(testsim1[[1]][,1], testsim2[[1]][,1]))
+mean(testsim1[[1]][,1]); mean(testsim2[[1]][,1])
+var(testsim1[[1]][,1]); var(testsim2[[1]][,1])
+# seems to come out about the same, variance is similar and either one can be higher if you repeat the procedure a bunch of times. 
+
+# So, I think the way to go is to make a data frame with one row per treatment combination, and in each row put in a new Plot number (e.g. 100) and a new Year number (e.g. 2018). Then simulate 1000 times or so, setting re.form to NULL and allow.new.levels to TRUE. Each simulation will produce a new random value for each treatment combination. Those simulated values can then become the inputs to calculate 1000 lambdas per treatment combination. Then those lambdas can be analyzed without regard to the random effects structure (since they are all for unknown Plots and Years). 
+
+
 
 m1.t.sim <- simulate(m1.trait, nsim = 1000, seed = 1, newdata = sim.dem, re.form = NULL, allow.new.levels = T) # still dont understand this warning, or rather i understand it but no idea why its giving it to me
 
@@ -42,6 +86,9 @@ for(i in 1:1000) {
 ###
 # Seed Set
 ###
+
+
+
 
 sim.dem.s <- exp(simulate(m2.trait, nsim = 1000, seed=1, newdata = sim.dem, re.form = NULL, allow.new.levels = T))
 
